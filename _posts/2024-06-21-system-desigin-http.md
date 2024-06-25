@@ -124,4 +124,5 @@ REST API 설계시 중요한 `Method`, `CORS` 등이나 HTTP 메시지의 구성
 HTTP를 암호화하여 보안 연결을 하는 `HTTPS`, `GET 방식과 멱등성` 등  
 모두다 담기엔 포스트가 너무 길어질 듯 하여 이정도로 마무리 해둘까 합니다.
 
-틈틈히 관련 내용에 대해 포스팅 할 수 있도록 하겠습니다.
+HTTP를 조금더 깊게 공부 하고자 하신다면 MDN 사이트를 추천 드립니다.  
+[MDN WEB DOC : HTTP](https://developer.mozilla.org/ko/docs/Web/HTTP)
