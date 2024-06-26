@@ -6,7 +6,7 @@
 title: REST API 설계
 date: 2024-06-25 10:57:00 +0900
 categories: ["시스템 디자인"]
-tags: ["rest", "api"]     # TAG names should always be lowercase
+tags: ["rest api"]     # TAG names should always be lowercase
 comments: true
 ---
 
@@ -227,6 +227,10 @@ HTTP의 응답 상태 코드 외에 아래와 같은 방법으로 요청에 대�
 }
 ```
 
+HATEOAS는 클라이언트와 서버간의 관계를 느슨하게 하고  
+리소스에 대한 추가작업을 명시할 수 있는 장점이 있는 반면  
+link에 대한 정보가 추가됨에 따라 트래픽 데이터가 증가되고  
+link를 관리하는 복잡도가 증가하는 단점이 있습니다.  
 
 #### 5. REST API 버전 관리
 
@@ -239,26 +243,74 @@ REST API 의 버전을 관리하기 위해서는 3가지 방법을 사용할 수
 
 **URI 관리**  
 
+> GET https://your-domain.com/v1/users
+
 장점 :  
 - URI로 관리 하는 방법을 사용하면 버전이 URI에 명시되어 있어 한눈에 파악하기가 쉽습니다.  
 - 클라이언트가 캐시를 처리하기가 쉽습니다.    
 
 단점 :  
 - 모든 URI에 버전이 명시되어 있어 서버가 추가되는 버전에 대한 URI 를 모두 가지고있어야 하므로  
-코드량(특히, Spring MVC의 경우 Controller)이 많이 증가 할 수 있습니다.  
+  코드량(특히, Spring MVC의 경우 Controller)이 많이 증가 할 수 있습니다.  
 - 기본 버전 설정이 어렵게 됩니다.  
 
-**쿼리 파라미터 관리** 하는 방법을 사용하면 같은 URI로 서로 다른 버전을 사용할수 있으며  
-기본 버전 설정이 쉽습니다.  
-또한, URI 관리와 마찬가지로 캐시가 쉽다는 장점이 있습니다.  
-다만 일부 브라우저 등에서는 캐시가 동작하지 않을 수 있습니다.
-단점으로는 로드밸런서 등에서 쿼리 파라미터에 따른 라우팅이 어려워  
-서버가 쿼리 파라미터에 따라 분기 처리 하여 응답하는 코드를 작성해야 합니다.
+<br />
 
-HTTP Custom Header로 관리하는 방법을 사용하면 쿼리 파라미터와 같은 장점을 가집니다.
-Custom Header를 허용하지 않는 로드밸런서나 라우터가 네트워크 경로 상에 있다면  
-Custom Header를 사용한다는 것 자체가 단점이 될 수 있습니다.
+**쿼리 파라미터 관리** 
 
-HTTP MIME Type으로 관리 하는 방법을 사용하면 HTTP Custom Header와 같은 장점을 가집니다.
-Accept 라는 표준 Header를 사용하기는 하나 잘 알려진 MIME Type을 지정하지 않는 경우  
-웹 서버는 406 코드를 반환 할 수 있는 단점이 있습니다.
+> GET https://your-domain.com/users?version=1
+
+장점 :  
+- 기본 버전 설정이 쉽습니다.  
+- 클라이언트가 캐시를 처리하기가 쉽습니다. (일부 브라우저 등은 제외)
+
+단점 :  
+- 쿼리 파라미터에 따른 라우팅이 어려워 서버가 분기 처리 하여 응답하도록 해야합니다.
+
+<br />
+
+**HTTP Custom Header 관리**
+
+> GET https://your-domain.com/users  
+> API-VERSON: 1
+
+장점 :   
+- 기본 버전 설정이 쉽습니다.
+- URI 상에 버전이 명시되지 않아 URI의 간결함을 유지할 수 있습니다.
+
+단점 :  
+- 로드밸런서나 웹서버에 Custom Header를 허용하도록 설정 해야 할 수 있습니다.
+
+<br />
+
+**HTTP MIME Type 관리**
+
+> GET https://your-domain.com/users  
+> Accept: application/vnd.**identifier**.v1+json
+
+**identifier** 부분에 회사 이름, 프로젝트 이름 등을 명시할 수 있습니다.  
+ex) Accept: application/vnd.company.sample.v1+json
+
+장점 :
+- 기본 버전 설정이 쉽습니다.
+- URI 상에 버전이 명시되지 않아 URI의 간결함을 유지할 수 있습니다.
+
+단점 :
+- Accept 라는 표준 Header를 사용하기는 하나 잘 알려진 MIME Type 값을 지정하지 않는 경우  
+  웹 서버는 406 코드를 반환 할 수 있는 단점이 있습니다.
+
+<br />
+
+### 마치며
+
+REST API는 위에서도 언급 했듯이 프로토콜이 아니기 때문에 다양한 형태로 설계 가능합니다.  
+하지만 설계의 기본 6원칙은 되도록 준수하는 것이 좋습니다.  
+
+위의 사항을 항상 명심하여 리소스 중심의 설계, HTTP 메서드를 통한 동작 지정,  
+필요한 비즈니스를 충족할수 있도록 다양하게 생각해보기,  
+응답에 대한 고민, 버전 관리 방법 선택의 순서로 차근차근 진행하면  
+근사한 REST API가 만들어 질 수 있다고 생각합니다.
+
+특히나 MSA에서 REST API는 중요한 인터페이스라고 생각합니다.  
+꼭 설계자가 아니더라도 본인이 맡은 업무를 REST 답게 생각해보고  
+더 나은 방법을 고민해보면 좋겠습니다.  
